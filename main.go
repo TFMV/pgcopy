@@ -11,8 +11,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/TFMV/pgcopy/db"
-	"github.com/TFMV/pgcopy/operations"
+	_ "github.com/TFMV/pgcopy/db/operations"
 )
 
 type Config struct {
@@ -76,7 +75,7 @@ func main() {
 	defer targetConn.Close(ctx)
 
 	for _, tableName := range config.Tables {
-		columns, err := operations.FetchColumns(ctx, sourceConn, tableName)
+		columns, err := db.operations.FetchColumns(ctx, sourceConn, tableName)
 		if err != nil {
 			log.Fatalf("Failed to fetch columns from source database for table %s: %v", tableName, err)
 		}
@@ -84,8 +83,8 @@ func main() {
 		dataChan := make(chan []interface{}, 10000)
 
 		wg.Add(2)
-		go operations.DataProducer(ctx, sourceConn, tableName, dataChan, &wg)
-		go operations.DataConsumer(ctx, targetConn, tableName, columns, dataChan, &wg)
+		go DataProducer(ctx, sourceConn, tableName, dataChan, &wg)
+		go db.operations.DataConsumer(ctx, targetConn, tableName, columns, dataChan, &wg)
 	}
 
 	wg.Wait()
