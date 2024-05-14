@@ -1,5 +1,7 @@
 # pgcopy
 
+![pgcopy](images/pgcopy.webp)
+
 `pgcopy` is a Go-based solution designed to replicate data from one PostgreSQL database to another. It supports data migration across multiple tables, ensuring that data types are handled correctly during the copy process.
 
 ## Features
