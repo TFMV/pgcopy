@@ -52,26 +52,11 @@ func DataProducer(ctx context.Context, pool *pgxpool.Pool, tableName string, dat
 	}
 	defer rows.Close()
 
-	columnDescriptions := rows.FieldDescriptions()
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
 			log.Fatalf("Failed to read row values: %v", err)
 		}
-
-		// Convert data to match target column types if necessary
-		for i, val := range values {
-			switch columnDescriptions[i].DataTypeOID {
-			case pgx.Int8OID:
-				if strVal, ok := val.(string); ok {
-					values[i], err = pgx.TextEncoder(strVal).EncodeText(context.Background(), nil)
-					if err != nil {
-						log.Fatalf("Failed to encode text to int8: %v", err)
-					}
-				}
-			}
-		}
-
 		dataChan <- values
 	}
 }
@@ -86,14 +71,17 @@ func DataConsumer(ctx context.Context, pool *pgxpool.Pool, tableName string, col
 	}
 	defer conn.Release()
 
-	var data [][]interface{}
+	rows := make([][]interface{}, 0)
 	for row := range dataChan {
-		data = append(data, row)
+		rows = append(rows, row)
 	}
 
-	copyCount, err := conn.Conn().CopyFrom(ctx, pgx.Identifier{tableName}, columns, pgx.CopyFromSlice(len(data), func(i int) ([]interface{}, error) {
-		return data[i], nil
-	}))
+	copyCount, err := conn.CopyFrom(
+		ctx,
+		pgx.Identifier{tableName},
+		columns,
+		pgx.CopyFromRows(rows),
+	)
 	if err != nil {
 		log.Fatalf("Failed to copy data to target database: %v", err)
 	}
