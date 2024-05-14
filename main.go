@@ -5,58 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/TFMV/pgcopy/db"
+	"github.com/TFMV/pgcopy/model"
 )
 
-type Config struct {
-	Source struct {
-		Host         string `yaml:"host"`
-		Port         string `yaml:"port"`
-		User         string `yaml:"user"`
-		Pass         string `yaml:"pass"`
-		DB           string `yaml:"db"`
-		IsUnixSocket bool   `yaml:"isUnixSocket"`
-	} `yaml:"source"`
-
-	Target struct {
-		Host         string `yaml:"host"`
-		Port         string `yaml:"port"`
-		User         string `yaml:"user"`
-		Pass         string `yaml:"pass"`
-		DB           string `yaml:"db"`
-		IsUnixSocket bool   `yaml:"isUnixSocket"`
-	} `yaml:"target"`
-
-	Tables []string `yaml:"tables"`
-}
-
-type JsonResponse struct {
-	Message   string        `json:"message"`
-	TimeTaken time.Duration `json:"timeTaken"`
-}
-
-func (c *Config) getConf() *Config {
-	yamlContent, err := os.ReadFile("config.yaml")
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-	}
-
-	err = yaml.Unmarshal(yamlContent, c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-	}
-	return c
-}
-
 func main() {
-	var config Config
-	config.getConf()
+	config, err := model.GetConf("config.yaml")
+	if err != nil {
+		log.Fatalf("Error reading config: %v", err)
+	}
 
 	ctx := context.Background()
 	var wg sync.WaitGroup
@@ -90,7 +50,7 @@ func main() {
 	wg.Wait()
 
 	elapsedTime := time.Since(startTime)
-	response := JsonResponse{
+	response := model.JsonResponse{
 		Message:   "Data replication completed successfully",
 		TimeTaken: elapsedTime,
 	}

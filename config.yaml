@@ -15,6 +15,6 @@ target:
   isUnixSocket: false
 
 tables:
-  - "customer"
   - "tommy"
   - "barb"
+  - "flights"
