@@ -52,13 +52,16 @@ func main() {
 	elapsedTime := time.Since(startTime)
 	response := model.JsonResponse{
 		Message:   "Data replication completed successfully",
-		TimeTaken: elapsedTime,
+		TimeTaken: elapsedTime.Seconds(),
 	}
 
 	respBytes, err := json.Marshal(response)
 	if err != nil {
 		log.Fatalf("Error encoding JSON response: %v", err)
 	}
+
+	fmt.Printf("Response: %s\n", string(respBytes))
+	fmt.Printf("Time taken: %.2f seconds\n", elapsedTime.Seconds())
 
 	fmt.Println(string(respBytes))
 }

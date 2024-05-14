@@ -2,7 +2,6 @@ package model
 
 import (
 	"io/ioutil"
-	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -26,8 +25,8 @@ type Config struct {
 
 // JsonResponse represents the structure of the JSON response.
 type JsonResponse struct {
-	Message   string        `json:"message"`
-	TimeTaken time.Duration `json:"timeTaken"`
+	Message   string  `json:"message"`
+	TimeTaken float64 `json:"timeTaken"`
 }
 
 // GetConf reads the YAML configuration file and unmarshals it into a Config struct.
