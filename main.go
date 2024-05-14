@@ -62,20 +62,20 @@ func main() {
 	var wg sync.WaitGroup
 	startTime := time.Now()
 
-	sourceConn, err := db.Connect(ctx, config.Source.Host, config.Source.Port, config.Source.User, config.Source.Pass, config.Source.DB, config.Source.IsUnixSocket)
+	sourcePool, err := db.ConnectPool(ctx, config.Source.Host, config.Source.Port, config.Source.User, config.Source.Pass, config.Source.DB, config.Source.IsUnixSocket)
 	if err != nil {
 		log.Fatalf("Unable to connect to source database: %v", err)
 	}
-	defer sourceConn.Close(ctx)
+	defer sourcePool.Close()
 
-	targetConn, err := db.Connect(ctx, config.Target.Host, config.Target.Port, config.Target.User, config.Target.Pass, config.Target.DB, config.Target.IsUnixSocket)
+	targetPool, err := db.ConnectPool(ctx, config.Target.Host, config.Target.Port, config.Target.User, config.Target.Pass, config.Target.DB, config.Target.IsUnixSocket)
 	if err != nil {
 		log.Fatalf("Unable to connect to target database: %v", err)
 	}
-	defer targetConn.Close(ctx)
+	defer targetPool.Close()
 
 	for _, tableName := range config.Tables {
-		columns, err := db.FetchColumns(ctx, sourceConn, tableName)
+		columns, err := db.FetchColumns(ctx, sourcePool, tableName)
 		if err != nil {
 			log.Fatalf("Failed to fetch columns from source database for table %s: %v", tableName, err)
 		}
@@ -83,8 +83,8 @@ func main() {
 		dataChan := make(chan []interface{}, 10000)
 
 		wg.Add(2)
-		go db.DataProducer(ctx, sourceConn, tableName, dataChan, &wg)
-		go db.DataConsumer(ctx, targetConn, tableName, columns, dataChan, &wg)
+		go db.DataProducer(ctx, sourcePool, tableName, dataChan, &wg)
+		go db.DataConsumer(ctx, targetPool, tableName, columns, dataChan, &wg)
 	}
 
 	wg.Wait()
