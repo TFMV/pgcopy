@@ -1,0 +1,20 @@
+source:
+  host: "localhost"
+  port: "5432"
+  user: "source_user"
+  pass: "source_password"
+  db: "source_database"
+  isUnixSocket: false
+
+target:
+  host: "localhost"
+  port: "5432"
+  user: "target_user"
+  pass: "target_password"
+  db: "target_database"
+  isUnixSocket: false
+
+tables:
+  - "table1"
+  - "table2"
+  - "table3"
